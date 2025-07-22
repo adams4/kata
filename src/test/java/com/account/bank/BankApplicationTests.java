@@ -1,42 +1,47 @@
 package com.account.bank;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.account.bank.model.TransactionEntity;
+import com.account.bank.repository.TransactionRepository;
 
-@SpringBootTest
-class BankApplicationTests {
+import org.springframework.beans.factory.annotation.Autowired;
 
-    @Test
-    void deposit_shouldIncreaseBalance() {
-        BankAccount account = new BankAccount();
-        account.deposit(500);
-        assertEquals(500, account.getBalance());
-    }
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.*;
 
-    @Test
-    void withdraw_shouldDecreaseBalance() {
-        BankAccount account = new BankAccount();
-        account.deposit(1000);
-        account.withdraw(400);
-        assertEquals(600, account.getBalance());
-    }
 
-    @Test
-    void withdraw_shouldThrowException_whenInsufficientFunds() {
-        BankAccount account = new BankAccount();
-        account.deposit(100);
-        Exception e = assertThrows(IllegalStateException.class, () -> account.withdraw(200));
-        assertEquals("Fonds insuffisants.", e.getMessage());
-    }
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class BankApplicationTests {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Test
-    void printStatement_shouldNotThrow() {
-        BankAccount account = new BankAccount();
-        account.deposit(1000);
-        account.withdraw(200);
-        account.printStatement(); 
+    void fullIntegrationTest() {
+        // Clean DB
+        transactionRepository.deleteAll();
+
+        // Deposit
+        ResponseEntity<String> depositResponse = restTemplate.postForEntity("/account/deposit?amount=1000", null, String.class);
+        assertThat(depositResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(depositResponse.getBody()).contains("Dépôt");
+
+        // Withdraw
+        ResponseEntity<String> withdrawResponse = restTemplate.postForEntity("/account/withdraw?amount=400", null, String.class);
+        assertThat(withdrawResponse.getBody()).contains("Retrait");
+
+        // Get balance
+        ResponseEntity<String> balanceResponse = restTemplate.getForEntity("/account/balance", String.class);
+        assertThat(balanceResponse.getBody()).isEqualTo("600");
+
+        // Get statement
+        ResponseEntity<TransactionEntity[]> statement = restTemplate.getForEntity("/account/statement", TransactionEntity[].class);
+        assertThat(statement.getBody()).hasSize(2);
     }
 }
-

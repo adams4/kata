@@ -1,9 +1,8 @@
-package com.account.bank;
+package com.account.bank.model;
 
 import java.time.LocalDate;
 
 public class Transaction {
-
     private final LocalDate date;
     private final int amount;
     private final int balance;
@@ -12,11 +11,6 @@ public class Transaction {
         this.date = date;
         this.amount = amount;
         this.balance = balance;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s | %7d | %6d", date, amount, balance);
     }
 
     public LocalDate getDate() {

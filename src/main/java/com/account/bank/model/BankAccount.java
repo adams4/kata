@@ -1,4 +1,4 @@
-package com.example.bank;
+package com.account.bank.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,13 +20,6 @@ public class BankAccount {
         if (amount > balance) throw new IllegalStateException("Fonds insuffisants.");
         balance -= amount;
         transactions.add(new Transaction(LocalDate.now(), -amount, balance));
-    }
-
-    public void printStatement() {
-        System.out.println("DATE       | MONTANT | SOLDE");
-        for (Transaction t : transactions) {
-            System.out.println(t);
-        }
     }
 
     public List<Transaction> getTransactions() {
